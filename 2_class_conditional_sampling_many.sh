@@ -11,7 +11,18 @@ fi
 
 opt_layer=fc6
 act_layer=fc8
-list_units="946 629" 
+
+#PlacesCNN
+
+#list_units="170 53 55 83 100 58 68 69" #outdoors -sky field ice creek dessert 
+list_units="0 7 61 62 125 132 188 189" #religeous places
+#list_units="8 9 84" #art
+
+#CaffeNet
+
+#list_units="861 999" - toilet
+#list_units="508 527 590 620 681" - digital
+# list_units="12 13 14 15 16 17 18 19 20 21 22 23 24 25" -birds
 
 xy=0              # Spatial position for conv layers, for fc layers: xy = 0
 n_iters=100       # For each unit, for N iterations
@@ -34,6 +45,11 @@ init_file="None"    # Start from a random code
 # Condition net
 net_weights="nets/caffenet/bvlc_reference_caffenet.caffemodel"
 net_definition="nets/caffenet/caffenet.prototxt"
+
+net_weights="nets/placesCNN/places205CNN_iter_300000.caffemodel"
+net_definition="nets/placesCNN/places205CNN_deploy_updated.prototxt"
+
+
 #-----------------------
 
 # Make a list of units
