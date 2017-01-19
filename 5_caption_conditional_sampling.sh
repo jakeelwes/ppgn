@@ -16,7 +16,7 @@ xy=0              # Spatial position for conv layers, for fc layers: xy = 0
 
 n_iters=200       # Run for N iterations
 reset_every=0     # Reset the code every N iterations (for diversity). 0 to disable resetting.
-save_every=0      # Save a sample every N iterations. 0 to disable saving intermediate samples.
+save_every=1      # Save a sample every N iterations. 0 to disable saving intermediate samples.
 lr=1              # Initial learning rate 
 lr_end=1e-10      # Linearly decay toward this ending lr (e.g. for decaying toward 0, set lr_end = 1e-10)
 threshold=0       # Filter out samples below this threshold e.g. 0.98
@@ -24,7 +24,7 @@ threshold=0       # Filter out samples below this threshold e.g. 0.98
 # -----------------------------------------------
 # Multipliers in the update rule Eq.11 in the paper
 # -----------------------------------------------
-epsilon1=1e-3     # prior
+epsilon1=1e-5     # prior
 epsilon2=1        # condition
 epsilon3=1e-17    # noise
 # -----------------------------------------------
@@ -49,7 +49,7 @@ if [ "${save_every}" -gt "0" ]; then
 fi
 
 ## Run a few times
-for seed in {0..2}; do
+#for seed in {0..2}; do
 
     python ./sampling_caption.py \
         --act_layer ${act_layer} \
@@ -82,7 +82,7 @@ for seed in {0..2}; do
   
         readlink -f ${f_chain}
     fi
-done
+#done
 
 # Combine samples into one big image
 output_file=${output_dir}/${sentence}.jpg
