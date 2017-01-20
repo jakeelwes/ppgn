@@ -4,18 +4,18 @@
 # 2016
 
 # Take in epsilon1
-if [ "$#" -ne "1" ]; then
-  echo "Provide epsilon1 e.g. 1e-5"
-  exit 1
-fi
+# if [ "$#" -ne "1" ]; then
+#   echo "Provide epsilon1 e.g. 1e-5"
+#   exit 1
+# fi
 
 opt_layer=fc6
 act_layer=fc8
 
 #PlacesCNN
 
-#list_units="170 53 55 83 100 58 68 69" #outdoors -sky field ice creek dessert 
-list_units="0 7 61 62 125 132 188 189" #religeous places
+#list_units="170 53 55 83 100 58 68 69" #outdoors -sky field ice creek dessert
+list_units="1 15 163 188 191 178 149 140 128 4 68 85 95 100 107 62" #religeous places
 #list_units="8 9 84" #art
 
 #CaffeNet
@@ -25,17 +25,17 @@ list_units="0 7 61 62 125 132 188 189" #religeous places
 # list_units="12 13 14 15 16 17 18 19 20 21 22 23 24 25" -birds
 
 xy=0              # Spatial position for conv layers, for fc layers: xy = 0
-n_iters=100       # For each unit, for N iterations
+n_iters=200       # For each unit, for N iterations
 reset_every=0     # For diversity, reset the code to random every N iterations. 0 to disable resetting.
 save_every=1      # Save a sample every N iterations
-lr=1 
+lr=1
 lr_end=1          # Linearly decay toward this ending lr (e.g. for decaying toward 0, set lr_end = 1e-10)
 threshold=0       # Filter out samples below this threshold e.g. 0.98
 
 # -----------------------------------------------
 # Multipliers in the update rule Eq.11 in the paper
 # -----------------------------------------------
-epsilon1=${1}       # prior
+epsilon1=1e-1       # prior
 epsilon2=1        # condition
 epsilon3=1e-17    # noise
 # -----------------------------------------------
@@ -43,8 +43,8 @@ epsilon3=1e-17    # noise
 init_file="None"    # Start from a random code
 
 # Condition net
-net_weights="nets/caffenet/bvlc_reference_caffenet.caffemodel"
-net_definition="nets/caffenet/caffenet.prototxt"
+# net_weights="nets/caffenet/bvlc_reference_caffenet.caffemodel"
+# net_definition="nets/caffenet/caffenet.prototxt"
 
 net_weights="nets/placesCNN/places205CNN_iter_300000.caffemodel"
 net_definition="nets/placesCNN/places205CNN_deploy_updated.prototxt"
@@ -58,15 +58,15 @@ n_units=$(grep -o "$needle" <<< "$list_units" | wc -l)
 units=${list_units// /_}
 
 # Output dir
-output_dir="output/${act_layer}_chain_${units}_eps1_${epsilon1}_eps3_${epsilon3}"
+output_dir="output/chain_eps1_${epsilon1}"
 mkdir -p ${output_dir}
 
 
 # Directory to store samples
 if [ "${save_every}" -gt "0" ]; then
     sample_dir=${output_dir}/samples
-    rm -rf ${sample_dir} 
-    mkdir -p ${sample_dir} 
+    rm -rf ${sample_dir}
+    mkdir -p ${sample_dir}
 fi
 
 unit_pad=`printf "%04d" ${unit}`
@@ -100,12 +100,12 @@ for seed in {0..0}; do
         f_chain=${output_dir}/chain_${units}_hx_${epsilon1}_noise_${epsilon3}__${seed}.jpg
 
         # Make a montage of intermediate samples
-        echo "Making a collage..."
-        montage ${sample_dir}/*.jpg -tile 10x -geometry +1+1 ${f_chain}
-        readlink -f ${f_chain}
+        # echo "Making a collage..."
+        # montage ${sample_dir}/*.jpg -tile 10x -geometry +1+1 ${f_chain}
+        # readlink -f ${f_chain}
 
-        echo "Making a gif..."
-        convert ${sample_dir}/*.jpg -delay 5 -loop 0 ${f_chain}.gif     
-        readlink -f ${f_chain}.gif
+        # echo "Making a gif..."
+        # convert ${sample_dir}/*.jpg -delay 5 -loop 0 ${f_chain}.gif
+        # readlink -f ${f_chain}.gif
     fi
 done
