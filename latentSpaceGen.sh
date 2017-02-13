@@ -13,6 +13,7 @@ opt_layer=fc6
 act_layer=fc8
 
 #PlacesCNN
+output_dir="output"
 
 number=$(find ${output_dir} -type f -name '*.jpg' | wc -l)
 
@@ -43,8 +44,9 @@ epsilon2=1        # condition
 epsilon3=1e-17    # noise
 # -----------------------------------------------
 
-init_file=${output_dir}/$(($number-1)).jpg     # Start from a random code
-
+output_dir="output"
+#init_file="${output_dir}/$(($number-1)).jpg"     # Start from a random code
+init_file="None"
 # Condition net
 # net_weights="nets/caffenet/bvlc_reference_caffenet.caffemodel"
 # net_definition="nets/caffenet/caffenet.prototxt"
@@ -61,13 +63,12 @@ n_units=$(grep -o "$needle" <<< "$list_units" | wc -l)
 units=${list_units// /_}
 
 # Output dir
-output_dir="outputAbstract"
 # mkdir -p ${output_dir}
 
 
 # Directory to store samples
 if [ "${save_every}" -gt "0" ]; then
-    sample_dir=${output_dir}/${list_units}
+    sample_dir=outputAbstract/${number}
     rm -rf ${sample_dir}
     mkdir -p ${sample_dir}
 fi

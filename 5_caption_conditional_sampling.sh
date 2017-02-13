@@ -24,7 +24,7 @@ threshold=0       # Filter out samples below this threshold e.g. 0.98
 # -----------------------------------------------
 # Multipliers in the update rule Eq.11 in the paper
 # -----------------------------------------------
-epsilon1=1e-5     # prior
+epsilon1=1e-3     # prior
 epsilon2=1        # condition
 epsilon3=1e-17    # noise
 # -----------------------------------------------
