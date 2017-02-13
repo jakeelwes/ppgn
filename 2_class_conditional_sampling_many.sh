@@ -14,8 +14,11 @@ act_layer=fc8
 
 #PlacesCNN
 
+number="${1}"
+
 #list_units="170 53 55 83 100 58 68 69" #outdoors -sky field ice creek dessert
-list_units="1 15 163 188 191 178 149 140 128 4 68 85 95 100 107 62" #religeous places
+list_units="`expr $number \* 10` `expr $number \* 10 + 1` `expr $number \* 10 + 2` `expr $number \* 10 + 3` `expr $number \* 10 + 4` `expr $number \* 10 + 5` `expr $number \* 10 + 6` `expr $number \* 10 + 7` `expr $number \* 10 + 8` `expr $number \* 10 + 9`" #religeous places
+#religeous places
 #list_units="8 9 84" #art
 
 #CaffeNet
