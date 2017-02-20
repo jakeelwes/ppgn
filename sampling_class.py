@@ -14,29 +14,72 @@ import caffe
 import numpy as np
 from numpy.linalg import norm
 import scipy.misc, scipy.io
-import argparse 
+import argparse
 import util
 from sampler import Sampler
 
 if settings.gpu:
-    caffe.set_device(0) # sampling on GPU (recommended for speed) 
-    caffe.set_mode_gpu() # sampling on GPU (recommended for speed) 
+    caffe.set_device(0) # sampling on GPU (recommended for speed)
+    caffe.set_mode_gpu() # sampling on GPU (recommended for speed)
+
+    def get_code(encoder, path, layer):
+        '''
+        Push the given image through an encoder to get a code.
+        '''
+
+        # set up the inputs for the net:
+        batch_size = 1
+        image_size = (3, 227, 227)
+        images = np.zeros((batch_size,) + image_size, dtype='float32')
+
+        in_image = scipy.misc.imread(path)
+        in_image = scipy.misc.imresize(in_image, (image_size[1], image_size[2]))
+
+        for ni in range(images.shape[0]):
+          images[ni] = np.transpose(in_image, (2, 0, 1))
+
+        # Convert from RGB to BGR
+        data = images[:,::-1]
+
+        # subtract the ImageNet mean
+        matfile = scipy.io.loadmat('ilsvrc_2012_mean.mat')
+        image_mean = matfile['image_mean']
+        topleft = ((image_mean.shape[0] - image_size[1])/2, (image_mean.shape[1] - image_size[2])/2)
+        image_mean = image_mean[topleft[0]:topleft[0]+image_size[1], topleft[1]:topleft[1]+image_size[2]]
+        del matfile
+        data -= np.expand_dims(np.transpose(image_mean, (2,0,1)), 0) # mean is already BGR
+
+        # initialize the encoder
+        encoder = caffe.Net(settings.encoder_definition, settings.encoder_weights, caffe.TEST)
+
+        # run encoder and extract the features
+        encoder.forward(data=data)
+        feat = np.copy(encoder.blobs[layer].data)
+        del encoder
+
+        zero_feat = feat[0].copy()[np.newaxis]
+
+        return zero_feat, data
+
+
 
 class ClassConditionalSampler(Sampler):
+
 
     def __init__ (self):
         # Load the list of class names
         with open(settings.synset_file, 'r') as synset_file:
             self.class_names = [ line.split(",")[0].split(" ", 1)[1].rstrip('\n') for line in synset_file.readlines()]
 
-        # Hard-coded list of layers that has been tested 
+        # Hard-coded list of layers that has been tested
         self.fc_layers = ["fc6", "fc7", "fc8", "loss3/classifier", "fc1000", "prob"]
         self.conv_layers = ["conv1", "conv2", "conv3", "conv4", "conv5"]
 
 
+
     def forward_backward_from_x_to_condition(self, net, end, image, condition):
         '''
-        Forward and backward passes through 'net', the condition model p(y|x), here an image classifier. 
+        Forward and backward passes through 'net', the condition model p(y|x), here an image classifier.
         '''
 
         unit = condition['unit']
@@ -64,17 +107,17 @@ class ClassConditionalSampler(Sampler):
 
         obj_prob = probs.flat[unit]
 
-        # Assign the gradient 
+        # Assign the gradient
         if end in self.fc_layers:
             one_hot.flat[unit] = softmax_grad[unit]
         elif end in self.conv_layers:
             one_hot[:, unit, xy, xy] = softmax_grad[unit]
         else:
             raise Exception("Invalid layer type!")
-        
+
         dst.diff[:] = one_hot
 
-        # Backpropagate the gradient to the image layer 
+        # Backpropagate the gradient to the image layer
         diffs = net.backward(start=end, diffs=['data'])
         g = diffs['data'].copy()
 
@@ -85,7 +128,7 @@ class ClassConditionalSampler(Sampler):
             'best_unit': best_unit,
             'best_unit_prob': probs.flat[best_unit]
         }
-        return g, obj_prob, info 
+        return g, obj_prob, info
 
 
     def get_label(self, condition):
@@ -150,7 +193,7 @@ def main():
     print " net definition: %s" % args.net_definition
     print "-------------"
 
-    # encoder and generator for images 
+    # encoder and generator for images
     encoder = caffe.Net(settings.encoder_definition, settings.encoder_weights, caffe.TEST)
     generator = caffe.Net(settings.generator_definition, settings.generator_weights, caffe.TEST)
 
@@ -173,22 +216,22 @@ def main():
         print ">>", np.min(start_code), np.max(start_code)
 
     # Separate the dash-separated list of units into numbers
-    conditions = [ { "unit": int(u), "xy": args.xy } for u in args.units.split("_") ]       
-    
+    conditions = [ { "unit": int(u), "xy": args.xy } for u in args.units.split("_") ]
+
     # Optimize a code via gradient ascent
     sampler = ClassConditionalSampler()
-    output_image, list_samples = sampler.sampling( condition_net=net, image_encoder=encoder, image_generator=generator, 
-                        gen_in_layer=settings.generator_in_layer, gen_out_layer=settings.generator_out_layer, start_code=start_code, 
-                        n_iters=args.n_iters, lr=args.lr, lr_end=args.lr_end, threshold=args.threshold, 
+    output_image, list_samples = sampler.sampling( condition_net=net, image_encoder=encoder, image_generator=generator,
+                        gen_in_layer=settings.generator_in_layer, gen_out_layer=settings.generator_out_layer, start_code=start_code,
+                        n_iters=args.n_iters, lr=args.lr, lr_end=args.lr_end, threshold=args.threshold,
                         layer=args.act_layer, conditions=conditions,
                         epsilon1=args.epsilon1, epsilon2=args.epsilon2, epsilon3=args.epsilon3,
-                        output_dir=args.output_dir, 
+                        output_dir=args.output_dir,
                         reset_every=args.reset_every, save_every=args.save_every)
 
     # Output image
     filename = "%s/%s_%04d_%04d_%s_h_%s_%s_%s__%s.jpg" % (
             args.output_dir,
-            args.act_layer, 
+            args.act_layer,
             conditions[0]["unit"],
             args.n_iters,
             args.lr,
