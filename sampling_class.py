@@ -38,45 +38,6 @@ class ClassConditionalSampler(Sampler):
         self.conv_layers = ["conv1", "conv2", "conv3", "conv4", "conv5"]
 
 
-    def get_code(encoder, path, layer):
-        '''
-        Push the given image through an encoder to get a code.
-        '''
-
-        # set up the inputs for the net:
-        batch_size = 1
-        image_size = (3, 227, 227)
-        images = np.zeros((batch_size,) + image_size, dtype='float32')
-
-        in_image = scipy.misc.imread(path)
-        in_image = scipy.misc.imresize(in_image, (image_size[1], image_size[2]))
-
-        for ni in range(images.shape[0]):
-          images[ni] = np.transpose(in_image, (2, 0, 1))
-
-        # Convert from RGB to BGR
-        data = images[:,::-1]
-
-        # subtract the ImageNet mean
-        matfile = scipy.io.loadmat('ilsvrc_2012_mean.mat')
-        image_mean = matfile['image_mean']
-        topleft = ((image_mean.shape[0] - image_size[1])/2, (image_mean.shape[1] - image_size[2])/2)
-        image_mean = image_mean[topleft[0]:topleft[0]+image_size[1], topleft[1]:topleft[1]+image_size[2]]
-        del matfile
-        data -= np.expand_dims(np.transpose(image_mean, (2,0,1)), 0) # mean is already BGR
-
-        # initialize the encoder
-        # encoder = caffe.Net(settings.encoder_definition, settings.encoder_weights, caffe.TEST)
-
-        # run encoder and extract the features
-        encoder.forward(data=data)
-        feat = np.copy(encoder.blobs[layer].data)
-        del encoder
-
-        zero_feat = feat[0].copy()[np.newaxis]
-
-        return zero_feat, data
-
 
 
 
@@ -141,6 +102,48 @@ class ClassConditionalSampler(Sampler):
 
     def print_progress(self, i, info, condition, prob, grad):
         print "step: %04d\t max: %4s [%.2f]\t obj: %4s [%.2f]\t norm: [%.2f]" % ( i, info['best_unit'], info['best_unit_prob'], condition['unit'], prob, norm(grad) )
+
+
+
+
+def get_code(encoder, path, layer):
+    '''
+    Push the given image through an encoder to get a code.
+    '''
+
+    # set up the inputs for the net:
+    batch_size = 1
+    image_size = (3, 227, 227)
+    images = np.zeros((batch_size,) + image_size, dtype='float32')
+
+    in_image = scipy.misc.imread(path)
+    in_image = scipy.misc.imresize(in_image, (image_size[1], image_size[2]))
+
+    for ni in range(images.shape[0]):
+      images[ni] = np.transpose(in_image, (2, 0, 1))
+
+    # Convert from RGB to BGR
+    data = images[:,::-1]
+
+    # subtract the ImageNet mean
+    matfile = scipy.io.loadmat('ilsvrc_2012_mean.mat')
+    image_mean = matfile['image_mean']
+    topleft = ((image_mean.shape[0] - image_size[1])/2, (image_mean.shape[1] - image_size[2])/2)
+    image_mean = image_mean[topleft[0]:topleft[0]+image_size[1], topleft[1]:topleft[1]+image_size[2]]
+    del matfile
+    data -= np.expand_dims(np.transpose(image_mean, (2,0,1)), 0) # mean is already BGR
+
+    # initialize the encoder
+    # encoder = caffe.Net(settings.encoder_definition, settings.encoder_weights, caffe.TEST)
+
+    # run encoder and extract the features
+    encoder.forward(data=data)
+    feat = np.copy(encoder.blobs[layer].data)
+    del encoder
+
+    zero_feat = feat[0].copy()[np.newaxis]
+
+    return zero_feat, data
 
 
 def main():
