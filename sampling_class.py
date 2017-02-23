@@ -22,6 +22,22 @@ if settings.gpu:
     caffe.set_device(0) # sampling on GPU (recommended for speed)
     caffe.set_mode_gpu() # sampling on GPU (recommended for speed)
 
+
+
+class ClassConditionalSampler(Sampler):
+
+
+
+    def __init__ (self):
+        # Load the list of class names
+        with open(settings.synset_file, 'r') as synset_file:
+            self.class_names = [ line.split(",")[0].split(" ", 1)[1].rstrip('\n') for line in synset_file.readlines()]
+
+        # Hard-coded list of layers that has been tested
+        self.fc_layers = ["fc6", "fc7", "fc8", "loss3/classifier", "fc1000", "prob"]
+        self.conv_layers = ["conv1", "conv2", "conv3", "conv4", "conv5"]
+
+
     def get_code(encoder, path, layer):
         '''
         Push the given image through an encoder to get a code.
@@ -50,7 +66,7 @@ if settings.gpu:
         data -= np.expand_dims(np.transpose(image_mean, (2,0,1)), 0) # mean is already BGR
 
         # initialize the encoder
-        encoder = caffe.Net(settings.encoder_definition, settings.encoder_weights, caffe.TEST)
+        # encoder = caffe.Net(settings.encoder_definition, settings.encoder_weights, caffe.TEST)
 
         # run encoder and extract the features
         encoder.forward(data=data)
@@ -61,19 +77,6 @@ if settings.gpu:
 
         return zero_feat, data
 
-
-
-class ClassConditionalSampler(Sampler):
-
-
-    def __init__ (self):
-        # Load the list of class names
-        with open(settings.synset_file, 'r') as synset_file:
-            self.class_names = [ line.split(",")[0].split(" ", 1)[1].rstrip('\n') for line in synset_file.readlines()]
-
-        # Hard-coded list of layers that has been tested
-        self.fc_layers = ["fc6", "fc7", "fc8", "loss3/classifier", "fc1000", "prob"]
-        self.conv_layers = ["conv1", "conv2", "conv3", "conv4", "conv5"]
 
 
 
