@@ -15,11 +15,12 @@ act_layer=fc8
 #PlacesCNN
 output_dir="output"
 
-number=$(find ${output_dir} -type f -name '*.jpg' | wc -l)
-
+# number=$(find ${output_dir} -type f -name '*.jpg' | wc -l)
+number="${1}"
 
 #list_units="170 53 55 83 100 58 68 69" #outdoors -sky field ice creek dessert
-list_units="`expr $number \* 10` `expr $number \* 10 + 1` `expr $number \* 10 + 2` `expr $number \* 10 + 3` `expr $number \* 10 + 4` `expr $number \* 10 + 5` `expr $number \* 10 + 6` `expr $number \* 10 + 7` `expr $number \* 10 + 8` `expr $number \* 10 + 9`" #religeous places
+list_units="`expr $number \* 10` `expr $number \* 10 + 1` `expr $number \* 10 + 2` `expr $number \* 10 + 3` `expr $number \* 10 + 4` `expr $number \* 10 + 5` `expr $number \* 10 + 6` `expr $number \* 10 + 7` `expr $number \* 10 + 8` `expr $number \* 10 + 9`"
+list_units="`expr $number \* 10` `expr $number \* 10 + 1` `expr $number \* 10 + 2`"
 #list_units="8 9 84" #art
 
 #CaffeNet
@@ -45,8 +46,8 @@ epsilon3=1e-17    # noise
 # -----------------------------------------------
 
 output_dir="output"
-#init_file="${output_dir}/$(($number-1)).jpg"     # Start from a random code
-init_file="None"
+init_file="${output_dir}/$(($number-1)).jpg"     # Start from a random code
+# init_file="None"
 # Condition net
 # net_weights="nets/caffenet/bvlc_reference_caffenet.caffemodel"
 # net_definition="nets/caffenet/caffenet.prototxt"
